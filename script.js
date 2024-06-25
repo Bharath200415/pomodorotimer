@@ -1,5 +1,5 @@
 // Global variables
-let timeLeft = 59 * 60; // seconds
+let timeLeft = 60 * 60; // seconds
 let timerInterval;
 let currentInterval = 'pomodoro';
 let backgroundColor = '#F1F1EF'; // Default background color
@@ -15,6 +15,7 @@ const longBreakIntervalBtn = document.getElementById('long-break-interval-btn');
 const settingsBtn = document.getElementById('settings-btn');
 const settingsModal = document.getElementById('settings-modal');
 const closeModalBtn = document.querySelector('.close-btn');
+const durationselect=document.getElementById('duration');
 const backgroundColorSelect = document.getElementById('background-color');
 const fontColorSelect = document.getElementById('font-color');
 const saveBtn = document.getElementById('save-btn');
@@ -22,7 +23,7 @@ const saveBtn = document.getElementById('save-btn');
 // Event listeners for interval buttons
 pomodoroIntervalBtn.addEventListener('click', () => {
   currentInterval = 'pomodoro';
-  timeLeft = 59 * 60;
+  timeLeft = 60 * 60;
   updateTimeLeftTextContent();
 });
 
@@ -52,7 +53,7 @@ startStopBtn.addEventListener('click', () => {
 resetBtn.addEventListener('click', () => {
   stopTimer();
   if (currentInterval === 'pomodoro') {
-    timeLeft = 59 * 60;
+    timeLeft = 60 * 60;
   } else if (currentInterval === 'short-break') {
     timeLeft = 5 * 60;
   } else {
@@ -76,13 +77,19 @@ closeModalBtn.addEventListener('click', () => {
 saveBtn.addEventListener('click', () => {
   const newBackgroundColor = backgroundColorSelect.value;
   const newFontColor = fontColorSelect.value;
+  const selectedDuration = durationselect.value;
 
   // Save preferences to localStorage
   localStorage.setItem('backgroundColor', newBackgroundColor);
   localStorage.setItem('fontColor', newFontColor);
+  localStorage.setItem('Duration', selectedDuration);
 
   // Apply the new saved preferences
   applyUserPreferences();
+  if (currentInterval === 'pomodoro') {
+    timeLeft = parseInt(selectedDuration, 10);
+    updateTimeLeftTextContent();
+  }
 
   // Close the modal after saving preferences
   settingsModal.style.display = 'none';
@@ -90,22 +97,35 @@ saveBtn.addEventListener('click', () => {
 
 // Function to start the timer
 function startTimer() {
+  // Retrieve the pomodoro duration from local storage
+  let pomodoroDuration = localStorage.getItem('pomodoroDuration');
+  
+  if (!pomodoroDuration) {
+    pomodoroDuration = 59 * 60 + 59; // default to 59 minutes and 59 seconds if not set
+  }
+
+  if (currentInterval === 'pomodoro') {
+    timeLeft = parseInt(pomodoroDuration, 10);
+  }
+
   timerInterval = setInterval(() => {
     timeLeft--;
     updateTimeLeftTextContent();
     if (timeLeft === 0) {
       clearInterval(timerInterval);
       if (currentInterval === 'pomodoro') {
-        timeLeft = 5 * 60;
+        timeLeft = 5 * 60; // 5 minutes for short break
         currentInterval = 'short-break';
         startTimer();
       } else if (currentInterval === 'short-break') {
-        timeLeft = 10 * 60;
+        timeLeft = 10 * 60; // 10 minutes for long break
         currentInterval = 'long-break';
         startTimer();
       } else {
-        timeLeft = 59 * 60;
+        // Reset to pomodoro with the saved duration
+        timeLeft = parseInt(pomodoroDuration, 10);
         currentInterval = 'pomodoro';
+        startTimer();
       }
     }
   }, 1000);
@@ -129,6 +149,7 @@ function applyUserPreferences() {
   // Retrieve user preferences from localStorage
   const savedBackgroundColor = localStorage.getItem('backgroundColor');
   const savedFontColor = localStorage.getItem('fontColor');
+  const savedPomodoroDuration = localStorage.getItem('pomodoroDuration');
 
   // Apply the preferences if they exist in localStorage
   if (savedBackgroundColor) {
@@ -143,6 +164,7 @@ function applyUserPreferences() {
   document.body.style.backgroundColor = backgroundColor;
   document.body.style.color = fontColor;
   timeLeftEl.style.color = fontColor;
+
   // Update the buttons' font and background color
   const buttons = document.querySelectorAll('.interval-btn, #start-stop-btn, #reset-btn, #settings-btn');
   buttons.forEach((button) => {
@@ -150,6 +172,16 @@ function applyUserPreferences() {
     button.style.backgroundColor = backgroundColor;
     button.style.borderColor = fontColor;
   });
+
+  // Set the Pomodoro duration if it's not the default
+  if (savedPomodoroDuration) {
+    if (currentInterval === 'pomodoro') {
+      timeLeft = parseInt(savedPomodoroDuration, 10);
+      updateTimeLeftTextContent();
+    }
+    // Update the duration select dropdown to reflect the saved value
+    durationselect.value = savedPomodoroDuration;
+  }
 }
 
 // Apply user preferences on page load
