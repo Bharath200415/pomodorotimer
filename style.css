@@ -152,6 +152,15 @@ body {
   
 }
 
+footer{
+  font-family:Rubik;
+  display:flex;
+  text-align: center;
+  margin-top: auto;
+
+
+}
+
 select {
   // A reset of styles, including removing the default dropdown arrow
   appearance: none;
@@ -166,3 +175,4 @@ select {
   cursor: inherit;
   line-height: inherit;
 }
+
